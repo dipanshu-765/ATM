@@ -1,6 +1,7 @@
 import sqlite3
 import random
 import re
+import hashlib
 
 
 def count_accounts():
@@ -36,15 +37,17 @@ def create_account():
     conn = sqlite3.connect("AccountsInfo.db")
     cur = conn.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS Accounts(Account_No INTEGER, Card_No TEXT,
-                    User_Name TEXT, Phone_Number TEXT, Amount FLOAT, Pin TEXT )''')
+                    User_Name TEXT, Phone_Number TEXT, Amount FLOAT, Pin TEXT, Score INTEGER, 
+                    Last_Score_Update TEXT )''')
     new_account_no = count_accounts() + 1
     new_card_no = card_no_gen()
+    hashed_card_no = str(hashlib.sha512(new_card_no.encode()).hexdigest())
     new_user_name = input("Enter Name: ")
     new_phone_number = input("Enter Phone Number: ")
     new_amount = float(input("Enter Amount: "))
-    cur.execute('''INSERT INTO Accounts (Account_No, Card_No, User_Name, Phone_Number, Amount) 
-                    VALUES (?, ?, ?, ?, ?)''',
-                (new_account_no, new_card_no, new_user_name, new_phone_number, new_amount))
+    cur.execute('''INSERT INTO Accounts (Account_No, Card_No, User_Name, Phone_Number, Amount, Score) 
+                    VALUES (?, ?, ?, ?, ?, 0)''',
+                (new_account_no, hashed_card_no, new_user_name, new_phone_number, new_amount))
     print("Card Number generated for the user is: ", new_card_no)
     conn.commit()
     conn.close()
@@ -53,8 +56,8 @@ def create_account():
 def update_account(card):
     conn = sqlite3.connect("AccountsInfo.db")
     cur = conn.cursor()
-    cmd = "SELECT * FROM Accounts WHERE Card_No = " + str(card)
-    cursor = cur.execute(cmd)
+    card = str(hashlib.sha512(card.encode()).hexdigest())
+    cursor = cur.execute("SELECT * FROM Accounts WHERE Card_No = ?", (card,))
     record_exists = False
     for row in cursor:
         record_exists = True

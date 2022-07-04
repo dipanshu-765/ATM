@@ -83,3 +83,8 @@ def decrypt(cipher, priv, n):
         a = pow(num, priv, n)
         plain = plain + str(chr(a))
     return plain
+
+
+def decrypt_text(cipher_text, priv, n):
+    cipher = [ord(x) for x in cipher_text]
+    return decrypt(cipher, priv, n)
